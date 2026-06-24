@@ -1,6 +1,7 @@
 package org.jay.appstarter.sort
 
-import java.util.*
+import java.util.LinkedList
+import java.util.Queue
 
 /**
  * 有向无环图的拓扑排序算法
@@ -34,13 +35,13 @@ class Graph(
     /**
      * 拓扑排序
      */
-    fun topologicalSort(): Vector<Int> {
+    fun topologicalSort(): MutableList<Int> {
 
         val indegree = IntArray(mVerticalCount)
 
         //初始化所有点的入度数量
         for (i in 0 until mVerticalCount) {
-            val temp = mAdj[i] as ArrayList<Int>
+            val temp = mAdj[i] ?: continue
             for (node in temp) {
                 indegree[node]++
             }
@@ -55,7 +56,7 @@ class Graph(
             }
         }
         var cnt = 0
-        val topOrder = Vector<Int>()
+        val topOrder = ArrayList<Int>(mVerticalCount)
         while (!queue.isEmpty()) {
             val u = queue.poll()
             topOrder.add(u)
@@ -65,7 +66,7 @@ class Graph(
             // 找到该点（入度为0）的所有邻接点
             for (node in list) {
 
-                // //把这个点的入度减一，如果入度变成了0，那么添加到入度0的队列里
+                // 把这个点的入度减一，如果入度变成了0，那么添加到入度0的队列里
                 if (--indegree[node] == 0) {
 
                     // 添加节点到队列中

@@ -27,19 +27,29 @@ class DispatchRunnable(private val mTask : Task,
         startTime = System.currentTimeMillis()
 
         // 执行Task
-        mTask.isRunning = true
-        mTask.run()
+        try {
+            mTask.isRunning = true
+            mTask.run()
 
-        // 执行Task的尾部任务
-        val tailRunnable = mTask.getTailRunnable()
-        tailRunnable?.run()
-        if (!mTask.needCall() || !mTask.runOnMainThread()) {
-            printTaskLog(startTime, waitTime)
-            TaskStat.markTaskDone()
-            mTask.isFinished = true
-            mTaskDispatcher.satisfyChildren(mTask)
-            mTaskDispatcher.markTaskDone(mTask)
-            DispatcherLog.i(mTask.javaClass.simpleName + " finish")
+            // 执行Task的尾部任务
+            val tailRunnable = mTask.getTailRunnable()
+            tailRunnable?.run()
+            if (!mTask.needCall() || !mTask.runOnMainThread()) {
+                printTaskLog(startTime, waitTime)
+                TaskStat.markTaskDone()
+                mTask.isFinished = true
+                mTaskDispatcher.satisfyChildren(mTask)
+                mTaskDispatcher.markTaskDone(mTask)
+                DispatcherLog.i(mTask.javaClass.simpleName + " finish")
+            }
+        } catch (e: Throwable) {
+            DispatcherLog.e(mTask.javaClass.simpleName + " error", e)
+            if (!mTask.needCall() || !mTask.runOnMainThread()) {
+                TaskStat.markTaskDone()
+                mTask.isFinished = true
+                mTaskDispatcher.satisfyChildren(mTask)
+                mTaskDispatcher.markTaskDone(mTask)
+            }
         }
         Trace.endSection()
     }

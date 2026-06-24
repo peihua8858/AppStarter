@@ -1,6 +1,5 @@
 package org.jay.appstarter.utils
 
-import org.jay.appstarter.utils.DispatcherExecutor
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -55,8 +54,7 @@ object DispatcherExecutor {
     /**
      * 拒绝执行处理器
      */
-    private val sHandler =
-        RejectedExecutionHandler { r, executor -> Executors.newCachedThreadPool().execute(r) }
+    private val sHandler = ThreadPoolExecutor.CallerRunsPolicy()
 
     // 初始化线程池
     init {
@@ -64,7 +62,7 @@ object DispatcherExecutor {
             CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS.toLong(), TimeUnit.SECONDS,
             sPoolWorkQueue, sThreadFactory, sHandler
         )
-        cPUExecutor?.allowCoreThreadTimeOut(true)
+        cPUExecutor.allowCoreThreadTimeOut(true)
         iOExecutor = Executors.newCachedThreadPool(sThreadFactory)
     }
 

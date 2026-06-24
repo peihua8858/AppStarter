@@ -5,14 +5,14 @@ import kotlin.jvm.Volatile
 import org.jay.appstarter.stat.TaskStatBean
 import org.jay.appstarter.stat.TaskStat
 import org.jay.appstarter.utils.DispatcherLog
-import java.util.ArrayList
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 object TaskStat {
 
     @Volatile
     private var sCurrentSituation = ""
-    private val sBeans: MutableList<TaskStatBean> = ArrayList()
+    private val sBeans: MutableList<TaskStatBean> = CopyOnWriteArrayList()
     private var sTaskDoneCount = AtomicInteger()
 
     // 是否开启统计
@@ -26,7 +26,9 @@ object TaskStat {
             }
             i("currentSituation   $currentSituation")
             sCurrentSituation = currentSituation
-            setLaunchStat()
+            synchronized(sBeans) {
+                setLaunchStat()
+            }
         }
 
     fun markTaskDone() {
@@ -40,5 +42,4 @@ object TaskStat {
         sBeans.add(bean)
         sTaskDoneCount = AtomicInteger(0)
     }
-
 }

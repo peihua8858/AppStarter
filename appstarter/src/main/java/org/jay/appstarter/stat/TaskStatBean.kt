@@ -1,6 +1,6 @@
 package org.jay.appstarter.stat
 
-internal class TaskStatBean {
-    var situation: String? = null
-    var count = 0
-}
+internal data class TaskStatBean(
+    var situation: String? = null,
+    var count: Int = 0
+)

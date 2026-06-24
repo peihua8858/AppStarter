@@ -39,11 +39,15 @@ abstract class Task : ITask {
     /**
      * Task是否已经被分发
      */
+    @Deprecated("Use TaskDispatcher.markTaskDone instead")
     @Volatile
     var isSend = false
 
     // 当前Task依赖的Task数量（需要等待被依赖的Task执行完毕才能执行自己），默认没有依赖
-    private val mDepends = CountDownLatch(if (dependsOn() == null) 0 else dependsOn()!!.size)
+    private val mDepends: CountDownLatch = run {
+        val depends = dependsOn()
+        CountDownLatch(if (depends == null) 0 else depends.size)
+    }
 
     /**
      * 当前Task等待，让依赖的Task先执行
@@ -52,6 +56,7 @@ abstract class Task : ITask {
         try {
             mDepends.await()
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
             e.printStackTrace()
         }
     }

@@ -2,11 +2,11 @@ package org.jay.appstarter.utils
 
 import android.util.Log
 import org.jay.appstarter.BuildConfig
-import org.jay.appstarter.utils.DispatcherLog
 
 // 日志打印器
 object DispatcherLog {
 
+    @JvmStatic
     var isDebug = BuildConfig.DEBUG
 
     @JvmStatic
@@ -15,6 +15,11 @@ object DispatcherLog {
             return
         }
         Log.i("TaskDispatcher", msg!!)
+    }
+
+    @JvmStatic
+    fun e(msg: String?, e: Throwable?) {
+        Log.e("TaskDispatcher", msg ?: "", e)
     }
 
 }

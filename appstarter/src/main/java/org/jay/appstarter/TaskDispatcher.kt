@@ -4,7 +4,6 @@ import android.content.Context
 import kotlin.jvm.Volatile
 import androidx.annotation.UiThread
 import android.os.Looper
-import android.util.Log
 import org.jay.appstarter.sort.TaskSortUtil
 import org.jay.appstarter.stat.TaskStat
 import org.jay.appstarter.utils.DispatcherLog
@@ -12,6 +11,7 @@ import org.jay.appstarter.utils.Utils
 import java.lang.RuntimeException
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -37,7 +37,6 @@ class TaskDispatcher private constructor() {
     /**
      * 主线程任务
      */
-    @Volatile
     private var mMainThreadTasks: MutableList<Task> = ArrayList()
 
     private var mCountDownLatch: CountDownLatch? = null
@@ -50,13 +49,12 @@ class TaskDispatcher private constructor() {
     /**
      * 调用了 await 还没结束且需要等待的任务列表
      */
-    private val mNeedWaitTasks: MutableList<Task> = ArrayList()
+    private val mNeedWaitTasks: MutableList<Task> = CopyOnWriteArrayList()
 
     /**
      * 已经结束的Task
      */
-    @Volatile
-    private var mFinishedTasks: MutableList<Class<out Task>> = ArrayList(100) //
+    private var mFinishedTasks: MutableList<Class<out Task>> = CopyOnWriteArrayList()
 
     private val mDependedHashMap = HashMap<Class<out Task>, ArrayList<Task>>()
 
@@ -186,7 +184,7 @@ class TaskDispatcher private constructor() {
      */
     fun satisfyChildren(launchTask: Task) {
         val arrayList = mDependedHashMap[launchTask.javaClass]
-        if (arrayList != null && arrayList.size > 0) {
+        if (arrayList != null && arrayList.isNotEmpty()) {
             for (task in arrayList) {
                 task.satisfy()
             }
@@ -217,7 +215,6 @@ class TaskDispatcher private constructor() {
                         satisfyChildren(task)
                         markTaskDone(task)
                         DispatcherLog.i(task.javaClass.simpleName + " finish")
-                        Log.i("testLog", "call")
                     }
 
                 })
@@ -259,6 +256,7 @@ class TaskDispatcher private constructor() {
                 mCountDownLatch?.await(WAIT_TIME.toLong(), TimeUnit.MILLISECONDS)
             }
         } catch (e: InterruptedException) {
+            DispatcherLog.e("await interrupted", e)
         }
     }
 
@@ -291,7 +289,7 @@ class TaskDispatcher private constructor() {
          */
         @JvmStatic
         fun init(context: Context) {
-            Companion.context = context
+            this.context = context.applicationContext
             sHasInit = true
             isMainProcess = Utils.isMainProcess(Companion.context)
         }
