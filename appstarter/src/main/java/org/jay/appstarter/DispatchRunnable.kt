@@ -10,8 +10,10 @@ import org.jay.appstarter.utils.DispatcherLog
 /**
  * 任务真正执行的地方
  */
-class DispatchRunnable(private val mTask : Task,
-                       private val mTaskDispatcher: TaskDispatcher) : Runnable {
+class DispatchRunnable(
+    private val mTask: Task,
+    private val mTaskDispatcher: TaskDispatcher? = null,
+) : Runnable {
 
     override fun run() {
         Trace.beginSection(mTask.javaClass.simpleName)
@@ -38,8 +40,10 @@ class DispatchRunnable(private val mTask : Task,
                 printTaskLog(startTime, waitTime)
                 TaskStat.markTaskDone()
                 mTask.isFinished = true
-                mTaskDispatcher.satisfyChildren(mTask)
-                mTaskDispatcher.markTaskDone(mTask)
+                mTaskDispatcher?.let {
+                    it.satisfyChildren(mTask)
+                    it.markTaskDone(mTask)
+                }
                 DispatcherLog.i(mTask.javaClass.simpleName + " finish")
             }
         } catch (e: Throwable) {
@@ -47,8 +51,10 @@ class DispatchRunnable(private val mTask : Task,
             if (!mTask.needCall() || !mTask.runOnMainThread()) {
                 TaskStat.markTaskDone()
                 mTask.isFinished = true
-                mTaskDispatcher.satisfyChildren(mTask)
-                mTaskDispatcher.markTaskDone(mTask)
+                mTaskDispatcher?.let {
+                    it.satisfyChildren(mTask)
+                    it.markTaskDone(mTask)
+                }
             }
         }
         Trace.endSection()
